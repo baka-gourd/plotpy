@@ -95,6 +95,28 @@ impl Histogram {
         write!(&mut self.buffer, "plt.hist(values,label=labels{})\n", &opt).unwrap();
     }
 
+    pub fn draw_with_twin_x<'a, T, U>(&mut self, values: &Vec<Vec<T>>, labels: &[U])
+    where
+    T: std::fmt::Display + Num,
+    U: std::fmt::Display,
+    {
+        let opt = self.options();
+        generate_nested_list(&mut self.buffer, "values", values);
+        generate_list_quoted(&mut self.buffer, "labels", labels);
+        if self.colors.len() > 0 {
+            generate_list_quoted(&mut self.buffer, "colors", self.colors.as_slice());
+        }
+        write!(
+            &mut self.buffer,
+            "ax=plt.gca()\n\
+             ax_twinx=ax.twinx()\n\
+             ax_twinx.hist(values,label=labels{})\n\
+             plt.sca(ax)\n",
+            &opt
+        )
+        .unwrap();
+    }
+
     /// Sets the colors for each bar
     pub fn set_colors(&mut self, colors: &[&str]) -> &mut Self {
         self.colors = colors.iter().map(|color| color.to_string()).collect();
