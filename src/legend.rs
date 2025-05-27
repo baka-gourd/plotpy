@@ -110,6 +110,39 @@ impl Legend {
         }
     }
 
+    /// Draws legend (with support for twin y-axis and merged handles/labels)
+    pub fn draw_twin(&mut self) {
+        let opt = self.options();
+
+        // 如果需要将图例放到外部区域
+        if self.outside {
+            generate_list(&mut self.buffer, "coo", self.x_coords.as_slice());
+        }
+
+        // （注意：你的画图代码需要在这两行之后写入，这里假设你已经在别处生成了 ax.hist / ax_twinx.hist）
+
+        // 3. 从两个轴分别获取 legend handles 和 labels
+        write!(&mut self.buffer, "h1, l1 = ax.get_legend_handles_labels()\n").unwrap();
+        write!(&mut self.buffer, "h2, l2 = ax_twinx.get_legend_handles_labels()\n").unwrap();
+
+        // 4. 合并两个列表
+        write!(&mut self.buffer, "handles = h1 + h2\nlabels = l1 + l2\n").unwrap();
+
+        // 5. 只在有图例时才画
+        write!(
+            &mut self.buffer,
+            "if handles and labels:\n    leg = ax.legend(handles, labels, {})\n",
+            &opt
+        )
+        .unwrap();
+        write!(&mut self.buffer, "    add_to_ea(leg)\n").unwrap();
+
+        // 6. 如果不显示边框，则将边框线宽设为 0
+        if !self.show_frame {
+            write!(&mut self.buffer, "    leg.get_frame().set_linewidth(0.0)\n").unwrap();
+        }
+    }
+
     /// Sets the fontsize
     pub fn set_fontsize(&mut self, fontsize: f64) -> &mut Self {
         self.fontsize = fontsize;
